@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="referrer" content="no-referrer">
+    <title>Centro de Soporte Técnico y Mantenimiento</title>
+    
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
+    <style>
+        :root {
+            --bg-color: #f2f2f7; /* Gris iOS nativo */
+            --text-color: #1c1c1e;
+            --paypal-color: #0070ba;
+            --kofi-color: #ff5f5f;
+            --binance-color: #f3ba2f;
+            --liquid-glass-bg: rgba(255, 255, 255, 0.7);
+            --liquid-glass-border: rgba(255, 255, 255, 0.3);
+            --liquid-glass-shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+            overflow: hidden; /* Previene scroll durante la animación del modal */
+        }
+
+        /* Efecto Liquid Glass (Vidrio Esmerilado Premium) */
+        .glass-container {
+            background: var(--liquid-glass-bg);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border-radius: 30px;
+            border: 1px solid var(--liquid-glass-border);
+            box-shadow: 0 10px 30px var(--liquid-glass-shadow);
+            padding: 2.5rem;
+            width: 90%;
+            max-width: 380px;
+            text-align: center;
+            z-index: 10;
+        }
+
+        h2 { margin-top: 0; font-weight: 700; font-size: 1.5rem; }
+        p { font-size: 1rem; color: #6e6e73; line-height: 1.5; margin-bottom: 2rem; }
+
+        /* Estilos Base de Botones con Efecto Liquid */
+        .btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            padding: 16px;
+            margin: 12px 0;
+            border: none;
+            border-radius: 16px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            text-decoration: none;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* Curva de animación suave iOS */
+            position: relative;
+            overflow: hidden;
+            box-sizing: border-box;
+        }
+
+        /* Animación "Burbujeante" al presionar (Liquid Effect) */
+        .btn::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 5px;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.5);
+            opacity: 0;
+            border-radius: 100%;
+            transform: scale(1, 1) translate(-50%);
+            transform-origin: 50% 50%;
+        }
+
+        .btn:active::after {
+            animation: ripple 0.6s ease-out;
+        }
+
+        .btn:active {
+            transform: scale(0.96); /* Efecto de compresión nativo */
+        }
+
+        @keyframes ripple {
+            0% { transform: scale(0, 0); opacity: 1; }
+            20% { transform: scale(25, 25); opacity: 1; }
+            100% { opacity: 0; transform: scale(40, 40); }
+        }
+
+        /* Colores Específicos de Botones */
+        .btn-paypal {
+            background-color: var(--paypal-color);
+            background-image: linear-gradient(135deg, #009cde 0%, #003087 100%); /* Degradado Liquid */
+        }
+        .btn-kofi {
+            background-color: var(--kofi-color);
+            background-image: linear-gradient(135deg, #ff8a8a 0%, #ff5f5f 100%);
+        }
+        .btn-binance {
+            background-color: var(--binance-color);
+            background-image: linear-gradient(135deg, #f3ba2f 0%, #dca326 100%);
+            color: #1c1c1e;
+        }
+
+        /* Estilos del Modal de Binance */
+        .modal {
+            display: none; /* Oculto por defecto */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5); /* Fondo oscuro */
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .modal.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .modal-glass {
+            background: var(--liquid-glass-bg);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border-radius: 25px;
+            padding: 2rem;
+            width: 85%;
+            max-width: 320px;
+            text-align: center;
+            transform: translateY(50px) scale(0.9);
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); /* Animación de entrada estilo iOS */
+        }
+
+        .modal.active .modal-glass {
+            transform: translateY(0) scale(1);
+        }
+
+        .qr-image {
+            width: 200px;
+            height: 200px;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+        }
+
+        .copy-container {
+            display: flex;
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.5);
+            padding: 8px;
+            border-radius: 10px;
+            justify-content: center;
+        }
+
+        #binance-id {
+            font-family: monospace;
+            font-weight: 700;
+            margin-right: 10px;
+        }
+
+        .copy-icon {
+            cursor: pointer;
+            width: 20px;
+            height: 20px;
+            fill: #6e6e73;
+            transition: fill 0.2s;
+        }
+        .copy-icon:hover { fill: var(--paypal-color); }
+        .copy-icon:active { transform: scale(0.9); }
+
+        .close-modal {
+            margin-top: 1.5rem;
+            color: #6e6e73;
+            font-size: 0.9rem;
+            cursor: pointer;
+            background: none;
+            border: none;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="glass-container">
+        <h2>Apoyo Técnico</h2>
+        <p>Tu contribución voluntaria ayuda a cubrir los costos de infraestructura, mantenimiento del backend y el desarrollo de nuevas funcionalidades para optimizar la experiencia de todos.</p>
+        
+        <a href="https://www.paypal.com/donate/?hosted_button_id=MLFQKSCZJZD8S" class="btn btn-paypal" rel="noreferrer" id="paypal-link">
+            Donar con PayPal
+        </a>
+        
+        <a href="https://ko-fi.com/megaventas" class="btn btn-kofi" rel="noreferrer" id="kofi-link">
+            Invítame un café
+        </a>
+        
+        <button class="btn btn-binance" id="binance-btn">
+            Aporte con Binance Pay
+        </button>
+        
+        <p><small>Gracias por ayudar a mantener este proyecto.</small></p>
+    </div>
+
+    <div class="modal" id="binance-modal">
+        <div class="modal-glass">
+            <h3>Binance Pay</h3>
+            <img src="binance-qr.png" alt="Código QR de Binance Pay" class="qr-image">
+            
+            <div class="copy-container">
+                <span id="binance-id">@</span>
+                <svg class="copy-icon" id="copy-btn" viewBox="0 0 24 24" onclick="copyBinanceId()">
+                    <path d="M16 1H4C2.9 1 2 1.9 2 3V17H4V3H16V1ZM19 5H8C6.9 5 6 5.9 6 7V21C6 22.1 6.9 23 8 23H19C20.1 23 21 22.1 21 21V7C21 5.9 20.1 5 19 5ZM19 21H8V7H19V21Z"/>
+                </svg>
+            </div>
+            
+            <button class="close-modal" id="close-modal-btn">Volver</button>
+        </div>
+    </div>
+
+    <script>
+        // Inicializar Telegram Web App
+        const tg = window.Telegram.WebApp;
+        tg.expand(); // Expande la Mini App a pantalla completa
+
+        // Configuración de Montos Dinámicos (Opcional, hace las donaciones más 'humanas')
+        // Puedes setear montos como 4.98 o 5.05 en tus links
+        
+        // Elementos del DOM
+        const binanceBtn = document.getElementById('binance-btn');
+        const modal = document.getElementById('binance-modal');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+        const copyIcon = document.getElementById('copy-btn');
+
+        // Funciones del Modal
+        binanceBtn.addEventListener('click', () => {
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden'; // Previene scroll del fondo
+        });
+
+        const closeModal = () => {
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
+        };
+
+        closeModalBtn.addEventListener('click', closeModal);
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeModal(); // Cierra si hace clic fuera del vidrio
+        });
+
+        // Función Copiar Binance ID
+        function copyBinanceId() {
+            const binanceId = document.getElementById('binance-id').innerText;
+            navigator.clipboard.writeText(binanceId).then(() => {
+                // Pequeño feedback visual (cambia color temporalmente)
+                copyIcon.style.fill = 'var(--paypal-color)';
+                setTimeout(() => copyIcon.style.fill = '#6e6e73', 1000);
+                
+                // Feedback de Telegram (vibración leve si está disponible)
+                if (tg.HapticFeedback) {
+                    tg.HapticFeedback.notificationOccurred('success');
+                }
+            }).catch(err => {
+                console.error('Error al copiar:', err);
+            });
+        }
+    </script>
+</body>
+</html>
